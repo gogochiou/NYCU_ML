@@ -141,12 +141,14 @@
 ## cuDNN ##
 
 > Using ubuntu 18.04 and cuda 10.0 as example.
+> 
+> Cause nycu GPU is using cuda 10.1, so we need to [choose v.7.6.5 or newer](https://stackoverflow.com/questions/62475762/tensorflow-1-15-cannot-detect-gpu-with-cuda10-1)
 
 1. Go to [official website](https://developer.nvidia.com/rdp/cudnn-archive), and choose feasible version
 
     ![cudnn_download](./Picture/Env_Set/cuDNN/cudnn_download.png)
 
-2. Download **cuDNN Library for linux**, which is a tar file, then unzip it
+2. Download **cuDNN Library for linux**, which is a tar file, then unzip it, you should change to your download file name
 
         tar -xzvf cudnn-10.0-linux-x64-v7.6.5.32.tgz
 
@@ -180,6 +182,80 @@
 
 2. Construct an environment
 
+        # you can choose desire version of python
+        virtualenv venv --python=python3.6
+
+    There will be an venv file be construct.
+
+3. Activate virtual environment
+   
+        source ./venv/bin/activate
+    
+    ![venv](./Picture/Env_Set/Venv/venv.png)
+
+4. Install needed package
+
+        pip install tensorflow-gpu==1.15
+        pip install glob2      # there is no glob for install
+        pip install matplotlib torch torchvision numpy pathlib
+        pip install opencv-python # For cv2
+
+        # Deal with cv dependency
+        apt-get install libsm6
+        apt-get install libxrender1
+        apt-get install libxext-dev
+
+5. Open a python file (check_env.py), and add some code
+
+    ```python
+    import cv2
+    import matplotlib.pyplot as plt
+    import random
+    import torch
+    import torch.utils.data as data
+    import torchvision.transforms as transforms
+    import glob
+    import torch.nn as nn
+    import torch.nn.functional as F
+    import os
+    import numpy as np
+    import tensorflow as tf
+
+    from pathlib import Path
+    from tensorflow.python.framework.graph_util import convert_variables_to_constants
+
+    print("# GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
+    print("Tensorflow Version is %s" % tf.__version__)
+
+    input = tf.Variable(tf.random_normal([100, 28, 28, 1]))
+    filter = tf.Variable(tf.random_normal([5, 5, 1, 6]))
+
+    sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
+    sess.run(tf.global_variables_initializer())
+
+    op = tf.nn.conv2d(input, filter, strides = [1, 1, 1, 1], padding = 'VALID')
+    out = sess.run(op)
+    ```
+
+6. Execute python file
+
+        python check_env.py
+
+    The output should have belows information, with no error or failed. It is ok to see some warning about program syntax.
+
+        # GPUs Available:  1
+        Tensorflow Version is 1.15.0
+    
+    <center>
+    <img style="border-radius: 0.3125em; box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" src="./Picture/Env_Set/Venv/cudnn_bug.bmp.png">
+    <br>
+    <div style="color:orange; border-bottom: 1px solid #d9d9d9; display: inline-block; color: #999; padding: 2px;">cuDNN version not matching, just install other version!</div>
+    </center>
+
+7. Exit virtual environment
+
+        deactivate
+
 ## Reference ##
 
 - [深度學習環境安裝筆記](https://ithelp.ithome.com.tw/articles/10191457)
@@ -193,3 +269,13 @@
 - [Which TensorFlow and CUDA version combinations are compatible?](https://stackoverflow.com/questions/50622525/which-tensorflow-and-cuda-version-combinations-are-compatible)
 
 - [VSCode 2/5: 設定虛擬環境 Virtual Env，管理 Python 專案！](https://pythonviz.com/vscode/visual-studio-code-virtual-environment-setup/)
+
+- [virtualenv安装并指定python版本](https://zhuanlan.zhihu.com/p/38457004)
+
+- [搞懂Python的virtualenv](https://ithelp.ithome.com.tw/articles/10199980)
+
+- [TensorFlow + Virtualenv + Python 3](https://blog.csdn.net/chengyq116/article/details/96498385)
+
+- [Tensorflow的GPU支持模式下的安装要点](https://zhuanlan.zhihu.com/p/22410507)
+
+- [python中import cv2遇到的错误及安装方法](https://blog.csdn.net/yuanlulu/article/details/79017116)
